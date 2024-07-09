@@ -1,0 +1,10 @@
+server:
+  host: "127.0.0.1"
+  port: "8885"
+
+database:
+  dbuser: "test"
+  dbpassword: "123"
+  dbname: "test"
+  dbhost: "127.0.0.1"
+  dbport: "5432"
