@@ -26,11 +26,13 @@ func NewApp(ctx context.Context, cfg *configs.Config) *App {
 
 	appService := service.NewService(db, ctx) // инициализация сервисных методов
 
+	appHandlers := handlers.NewHandlers(appService) // инициализация хендлеров
+
 	mux := http.NewServeMux() // REST API хендлеры
-	mux.HandleFunc("GET /orderbook", handlers.GetOrderBookHandler(ctx, appService))
-	mux.HandleFunc("GET /order", handlers.GetOrderHistoryHandler(ctx, appService))
-	mux.HandleFunc("POST /orderbook", handlers.SaveOrderBookHandler(ctx, appService))
-	mux.HandleFunc("POST /order", handlers.SaveOrderHandler(ctx, appService))
+	mux.HandleFunc("GET /orderbook", appHandlers.GetOrderBookHandler())
+	mux.HandleFunc("GET /order", appHandlers.GetOrderHistoryHandler())
+	mux.HandleFunc("POST /orderbook", appHandlers.SaveOrderBookHandler())
+	mux.HandleFunc("POST /order", appHandlers.SaveOrderHandler())
 
 
 	app := &App{
