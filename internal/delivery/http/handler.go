@@ -1,13 +1,16 @@
 package http
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/dusk-chancellor/sc_service/internal/models"
 )
+
+type Handlers struct {
+	ServiceMethods ServiceMethods
+}
 
 // методы сервиса, реализованные в интерфейсе
 // основные функции с тз
@@ -18,8 +21,14 @@ type ServiceMethods interface {
 	SaveOrder(client *models.Client, order *models.HistoryOrder) error
 }
 
+func NewHandlers(serviceMethods ServiceMethods) *Handlers {
+	return &Handlers{
+		ServiceMethods: serviceMethods,
+	}
+}
+
 // Эндпоинт: GET /orderbook
-func GetOrderBookHandler(ctx context.Context, serviceMethods ServiceMethods) http.HandlerFunc {
+func (h *Handlers) GetOrderBookHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// exchange_name и pair получаем с параметров запроса
 		exchange_name := r.URL.Query().Get("exchange_name")
@@ -29,7 +38,7 @@ func GetOrderBookHandler(ctx context.Context, serviceMethods ServiceMethods) htt
 			return
 		}
 
-		orderBook, err := serviceMethods.GetOrderBook(exchange_name, pair)
+		orderBook, err := h.ServiceMethods.GetOrderBook(exchange_name, pair)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -47,7 +56,7 @@ func GetOrderBookHandler(ctx context.Context, serviceMethods ServiceMethods) htt
 }
 
 // Эндпоинт: POST /orderbook
-func SaveOrderBookHandler(ctx context.Context, serviceMethods ServiceMethods) http.HandlerFunc {
+func (h *Handlers) SaveOrderBookHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		exchange_name := r.URL.Query().Get("exchange_name")
 		pair := r.URL.Query().Get("pair")
@@ -63,7 +72,7 @@ func SaveOrderBookHandler(ctx context.Context, serviceMethods ServiceMethods) ht
 			return
 		}
 
-		if err := serviceMethods.SaveOrderBook(exchange_name, pair, orderBook); err != nil {
+		if err := h.ServiceMethods.SaveOrderBook(exchange_name, pair, orderBook); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -73,7 +82,7 @@ func SaveOrderBookHandler(ctx context.Context, serviceMethods ServiceMethods) ht
 }
 
 // Эндпоинт: GET /order
-func GetOrderHistoryHandler(ctx context.Context, serviceMethods ServiceMethods) http.HandlerFunc {
+func (h *Handlers) GetOrderHistoryHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var client models.Client
 		// читаем данные о клиенте с боди запроса (жсон)
@@ -82,7 +91,7 @@ func GetOrderHistoryHandler(ctx context.Context, serviceMethods ServiceMethods) 
 			return
 		}
 
-		orderHistory, err := serviceMethods.GetOrderHistory(&client)
+		orderHistory, err := h.ServiceMethods.GetOrderHistory(&client)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -98,7 +107,7 @@ func GetOrderHistoryHandler(ctx context.Context, serviceMethods ServiceMethods) 
 }
 
 // Эндпоинт: POST /order
-func SaveOrderHandler(ctx context.Context, serviceMethods ServiceMethods) http.HandlerFunc {
+func (h *Handlers) SaveOrderHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var order models.HistoryOrder
 		// читаем ордер с боди запроса
@@ -113,7 +122,7 @@ func SaveOrderHandler(ctx context.Context, serviceMethods ServiceMethods) http.H
 			Label:		 order.Label,
 			Pair:		 order.Pair,
 		}
-		if err := serviceMethods.SaveOrder(&client, &order); err != nil {
+		if err := h.ServiceMethods.SaveOrder(&client, &order); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
